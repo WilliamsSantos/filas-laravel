@@ -41,6 +41,7 @@ class ImportService {
                             'category_id' => $categoryId,
                             'title' => $document["titulo"],
                             'content' => $document["conteúdo"],
+                            'exercice_year' => $document['exercicio']
                         ]
                     ),
                     'filename' => $filename, 

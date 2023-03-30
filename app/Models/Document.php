@@ -18,7 +18,7 @@ class Document extends Model
         'title',
         'contents',
         'category_id',
-        'exercice_id',
+        'exercice_year',
     ];
 
     public function category()

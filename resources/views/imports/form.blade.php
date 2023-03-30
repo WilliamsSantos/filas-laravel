@@ -5,12 +5,12 @@
     @csrf
 
 <div class="file-upload">
-  <button class="file-upload-btn" type="button" onclick="$('.file-upload-input').trigger( 'click' )">Add Image</button>
+  <button class="file-upload-btn" type="button" onclick="$('.file-upload-input').trigger( 'click' )">Importar Arquivo</button>
 
   <div class="image-upload-wrap">
     <input class="file-upload-input" name="file" type='file' onchange="readURL(this);" accept="json/*" />
     <div class="drag-text">
-      <h3>Drag and drop a file or select add Image</h3>
+      <h3>Arraste e solte ou clique para escolhar o .JSON!</h3>
     </div>
   </div>
   <div class="file-upload-content">
