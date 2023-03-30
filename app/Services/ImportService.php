@@ -30,16 +30,23 @@ class ImportService {
     private function formatDataToBatchInsert($slug, $filename, $documents = [])
     {
         $exercice = $documents['exercicio'];
-        return array_map(
-            function($document) use ($filename, $exercice, $slug) 
+        return array_reduce($documents['documentos'], 
+            function ($result, $document) use ($filename, $exercice, $slug) 
             {
+                $isDuplicatedRegister = $this->documentModel
+                    ->where('exercice_year', $exercice)
+                    ->whereTitle($document["titulo"])
+                    ->exists();
+            
+                if ($isDuplicatedRegister) return $result;
+
                 $categoryId = $this->categoryModel
                     ->whereName($document['categoria'])
                     ->pluck('id')
                     ->first();
 
-                if ($categoryId)
-                    return [
+                if ($categoryId) {
+                    $result[] = [
                         'content' => json_encode(
                             [
                                 'category_id' => $categoryId,
@@ -49,15 +56,17 @@ class ImportService {
                             ]
                         ),
                         'slug' => $slug,
-                        'filename' => $filename, 
+                        'filename' => $filename,
                         'created_at' => Carbon::now(),
                     ];
+                    return $result;
+                }
 
                 throw new Exception(
-                    "O Arquivo contem categorias não cadastradas.", 
+                    "O Arquivo contem categorias não cadastradas.",
                     Response::HTTP_BAD_REQUEST
                 );
-        }, $documents['documentos']);
+            }, []);
     }
 
     public function storeFile(array $document): string
@@ -80,7 +89,7 @@ class ImportService {
 
         if (empty($storedDocuments))
             throw new Exception(
-                "Falha ao salvar os documentos.", 
+                "Nenhum registro salvo. Registros duplicados não são re-processados.", 
                 Response::HTTP_INTERNAL_SERVER_ERROR
             );
 
@@ -115,10 +124,10 @@ class ImportService {
                         $register = json_decode($item['content'], true);
 
                         dispatch(
-                            new storeFileData([
+                            (new storeFileData([
                                 ...$register, 
                                 'id' => $item['id']
-                            ])
+                            ]))->delay(now()->addMinutes(1))
                         );
                         
                         $acc['sends']++;

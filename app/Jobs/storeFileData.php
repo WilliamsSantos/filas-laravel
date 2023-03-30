@@ -37,6 +37,9 @@ class storeFileData implements ShouldQueue
         $this->document->create($this->register);
 
         $this->importQueue->where('id', $this->register['id'])
-        ->update(['status' => 'processed']);
+        ->update([
+            'status' => 'processed',
+            'processed_at' => \Carbon\Carbon::now()
+        ]);
     }
 }
