@@ -11,9 +11,7 @@ class Document extends Model
     use HasFactory, SoftDeletes;
 
     protected $table = 'documents';
-
     protected $primaryKey = 'id';
-
     protected $fillable = [ 
         'title',
         'contents',
