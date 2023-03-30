@@ -10,13 +10,11 @@ use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use App\Models\ImportQueue;
 use App\Models\Document;
-
-use \Carbon\Carbon;
 use DB;
 
 class storeFileData implements ShouldQueue
 {
-    use Dispatchable, InteractsWithQueue;
+    use Dispatchable, InteractsWithQueue, Queueable;
 
     private $importQueue;
     private $register;
@@ -41,5 +39,10 @@ class storeFileData implements ShouldQueue
             'status' => 'processed',
             'processed_at' => \Carbon\Carbon::now()
         ]);
+    }
+
+    public function delay()
+    {
+        return  \Carbon\Carbon::now()->addMinutes(2);
     }
 }

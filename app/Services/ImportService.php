@@ -124,10 +124,10 @@ class ImportService {
                         $register = json_decode($item['content'], true);
 
                         dispatch(
-                            (new storeFileData([
+                            new storeFileData([
                                 ...$register, 
                                 'id' => $item['id']
-                            ]))->delay(now()->addMinutes(1))
+                            ])
                         );
                         
                         $acc['sends']++;
