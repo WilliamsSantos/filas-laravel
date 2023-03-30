@@ -54,7 +54,7 @@ class ImportService {
                     ];
 
                 throw new Exception(
-                    "Arquivo com categoria incorreta", 
+                    "O Arquivo contem categorias não cadastradas.", 
                     Response::HTTP_BAD_REQUEST
                 );
         }, $documents['documentos']);
@@ -80,8 +80,8 @@ class ImportService {
 
         if (empty($storedDocuments))
             throw new Exception(
-                "Falha ao salvar os dados do arquivo.", 
-                Response::HTTP_BAD_REQUEST
+                "Falha ao salvar os documentos.", 
+                Response::HTTP_INTERNAL_SERVER_ERROR
             );
 
         $savedFile = $this->fileManager
@@ -90,7 +90,7 @@ class ImportService {
         if ($savedFile) return $filename;
 
         throw new Exception(
-            "Falha ao salvar arquivo", Response::HTTP_BAD_REQUEST
+            "Falha ao armazenar o arquivo.", Response::HTTP_INTERNAL_SERVER_ERROR
         );
     }
 
@@ -132,7 +132,7 @@ class ImportService {
             } while ($filesPending > 0);
 
             return $filesProcessed ?: throw new Exception(
-                "Falha ao salvar arquivo", Response::HTTP_BAD_REQUEST
+                "Falha ao tentar processar o arquivo.", Response::HTTP_INTERNAL_SERVER_ERROR
             );
         }
     }

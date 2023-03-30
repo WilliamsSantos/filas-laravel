@@ -28,7 +28,7 @@ class RunQueueRequest extends FormRequest
     public function identifierFile(): string
     {
         if (!$this->has('file'))
-            throw new Exception("Nenhum arquivo foi enviado", Response::HTTP_BAD_REQUEST);
+            throw new Exception("Arquivo não enviado.", Response::HTTP_BAD_REQUEST);
 
         $fileId = $this->get('file');
 
