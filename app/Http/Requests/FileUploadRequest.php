@@ -41,7 +41,7 @@ class FileUploadRequest extends FormRequest
     public function uploadFile(): array
     {
         if (!$this->hasFile('file'))
-            throw new Exception("Nenhum arquivo foi enviado", Response::HTTP_BAD_REQUEST);
+            throw new Exception("Nenhum arquivo foi enviado", Response::HTTP_NOT_FOUND);
 
         $uploadFile = $this->file('file');
 
@@ -49,7 +49,7 @@ class FileUploadRequest extends FormRequest
             $hash = hash_file('sha256', $uploadFile->getPathname());
 
             if ($this->fileManager->exists($hash))
-                throw new Exception("Arquivo já importado", Response::HTTP_BAD_REQUEST);
+                throw new Exception("Arquivo já importado anteriormente", Response::HTTP_CONFLICT);
 
             return [ 
                 'slug' => $uploadFile->getClientOriginalName(), 
@@ -59,13 +59,11 @@ class FileUploadRequest extends FormRequest
             ];
         }
 
-        throw new Exception("Arquivo no formato incorreto", Response::HTTP_BAD_REQUEST);
+        throw new Exception("Arquivo no formato incorreto", Response::HTTP_CONFLICT);
     }
 
     private function inCorrectFormat($fileContent)
     {
-        $exception = new Exception("Arquivo no formato incorreto.", Response::HTTP_BAD_REQUEST);
-
         $isCorrectFormat = true;
         if (!$fileContent || empty($fileContent)) {
             throw new Exception("Arquivo vazio.", Response::HTTP_BAD_REQUEST);
@@ -75,30 +73,23 @@ class FileUploadRequest extends FormRequest
         $requiredProperties = ['exercicio', 'documentos'];
         $requiredDocumentProperties = ['categoria', 'conteúdo', 'titulo'];
     
-        if (
-            array_intersect(
-                $requiredProperties, array_keys($fileContentArray)
-            ) !== $requiredProperties
-        ) 
+        $keysOfFileContent = array_keys($fileContentArray);
+        if (array_intersect($requiredProperties, $keysOfFileContent) !== $requiredProperties) 
         {
-            throw $exception;
+            throw new Exception("Formatação do arquivo fora do padrão.", Response::HTTP_BAD_REQUEST); 
         }
     
         if (empty($fileContentArray['documentos']))
         {
-            throw $exception;
+            throw new Exception("Arquivo não possui documentos.", Response::HTTP_BAD_REQUEST); 
         }
 
         foreach ($fileContentArray['documentos'] as $document) 
         {
-            if (
-                array_intersect(
-                    $requiredDocumentProperties, 
-                    array_keys($document)
-                ) !== $requiredDocumentProperties
-            ) 
+            $documentKeys = array_keys($document);
+            if (array_intersect($requiredDocumentProperties, $documentKeys) !== $requiredDocumentProperties) 
             {
-                throw $exception;
+                throw new Exception("Arquivo com documentos sem as propriedades necessárias.", Response::HTTP_BAD_REQUEST); 
             }
         }
 
