@@ -3,13 +3,11 @@
 namespace App\Utils;
 
 use Storage;
-use Exception;
 
 class FileManager
 {
     private $storage;
     private $storageDir;
-    private $customException;
 
     public function __construct()
     {
