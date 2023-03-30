@@ -35,6 +35,6 @@ class RunQueueRequest extends FormRequest
         if ($this->fileManager->exists($fileId))
             return $fileId;
 
-        throw new Exception("Arquivo não encontrado.", Response::HTTP_BAD_REQUEST);
+        throw new Exception("Arquivo não encontrado. para processamento.", Response::HTTP_BAD_REQUEST);
     }
 }

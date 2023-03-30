@@ -41,7 +41,7 @@ class FileUploadRequest extends FormRequest
     public function uploadFile(): array
     {
         if (!$this->hasFile('file'))
-            throw new Exception("Nenhum arquivo foi enviado", Response::HTTP_NOT_FOUND);
+            throw new Exception("Nenhum arquivo foi enviado.", Response::HTTP_NOT_FOUND);
 
         $uploadFile = $this->file('file');
 
@@ -49,7 +49,7 @@ class FileUploadRequest extends FormRequest
             $hash = hash_file('sha256', $uploadFile->getPathname());
 
             if ($this->fileManager->exists($hash))
-                throw new Exception("Arquivo já importado anteriormente", Response::HTTP_CONFLICT);
+                throw new Exception("Arquivo já importado anteriormente.", Response::HTTP_CONFLICT);
 
             return [ 
                 'slug' => $uploadFile->getClientOriginalName(), 
@@ -59,7 +59,7 @@ class FileUploadRequest extends FormRequest
             ];
         }
 
-        throw new Exception("Arquivo no formato incorreto", Response::HTTP_CONFLICT);
+        throw new Exception("Arquivo no formato incorreto.", Response::HTTP_CONFLICT);
     }
 
     private function inCorrectFormat($fileContent)
