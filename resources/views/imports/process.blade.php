@@ -2,7 +2,7 @@
 @section('content')
 <div class="container">
     <div class="card">
-        <div class="card-header">Processar arquivo {!! $filename !!}</div>
+        <div class="card-header">Processar arquivo: <b> {!! $slug !!}</b></div>
         <div class="card-body">
             @if ($errors->any())
                 <div class="alert alert-danger">

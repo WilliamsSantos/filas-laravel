@@ -27,47 +27,53 @@ class ImportService {
         $this->categoryModel = new Category;
     }
 
-    private function formatDataToBatchInsert($filename, $documents = [])
+    private function formatDataToBatchInsert($slug, $filename, $documents = [])
     {
-        return array_map(function($document) use ($filename) {
-            $categoryId = $this->categoryModel->whereName($document['categoria'])
-                ->pluck('id')
-                ->first();
+        $exercice = $documents['exercicio'];
+        return array_map(
+            function($document) use ($filename, $exercice, $slug) 
+            {
+                $categoryId = $this->categoryModel
+                    ->whereName($document['categoria'])
+                    ->pluck('id')
+                    ->first();
 
-            if ($categoryId)
-                return [
-                    'content' => json_encode(
-                        [
-                            'category_id' => $categoryId,
-                            'title' => $document["titulo"],
-                            'content' => $document["conteúdo"],
-                            'exercice_year' => $document['exercicio']
-                        ]
-                    ),
-                    'filename' => $filename, 
-                    'created_at' => Carbon::now(),
-                ];
+                if ($categoryId)
+                    return [
+                        'content' => json_encode(
+                            [
+                                'category_id' => $categoryId,
+                                'title' => $document["titulo"],
+                                'content' => $document["conteúdo"],
+                                'exercice_year' => $exercice
+                            ]
+                        ),
+                        'slug' => $slug,
+                        'filename' => $filename, 
+                        'created_at' => Carbon::now(),
+                    ];
 
-            throw new Exception(
-                "Arquivo com categoria incorreta", 
-                Response::HTTP_BAD_REQUEST
-            );
-        }, $documents);
+                throw new Exception(
+                    "Arquivo com categoria incorreta", 
+                    Response::HTTP_BAD_REQUEST
+                );
+        }, $documents['documentos']);
     }
 
     public function storeFile(array $document): string
     {
         $fileContent = $document['data'] ?: null;
         $filename = $document['filename'] ?: null;
-        $documents = $fileContent['documentos'] ?: null;
         $fileUploaded = $document['file'] ?: null;
+        $slug = $document['slug'] ?: null;
 
         $fileToBatchInsert = $this->formatDataToBatchInsert(
+            $slug,
             $filename,
-            $documents,
+            $fileContent,
         );
 
-        $arrayChunk = array_chunk($fileToBatchInsert, 500);
+        $arrayChunk = array_chunk($fileToBatchInsert ?: [], 500);
         $storedDocuments = array_map(function ($batch) {
             $this->importQueue->insert($batch);
         }, $arrayChunk);
@@ -91,7 +97,7 @@ class ImportService {
     public function processFile($filename)
     {
         if ($this->importQueue->where('status', 'pending')->exists()){
-           
+
             $columnsToQueueImport = ['id', 'content', 'status'];
             $bathSize = 100;
             $filesPending = $filesProcessed = 0;
@@ -105,14 +111,18 @@ class ImportService {
 
                 $sendsToQueye = 
                     array_reduce($registers, function($acc, $item) {
+
                         $register = json_decode($item['content'], true);
+
                         dispatch(
                             new storeFileData([
                                 ...$register, 
                                 'id' => $item['id']
                             ])
-                        )->delay(now()->addSeconds(1000));
+                        );
+                        
                         $acc['sends']++;
+                        
                         return $acc; 
                     }, ['sends' => 0 ]);
 

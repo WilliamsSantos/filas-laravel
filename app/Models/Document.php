@@ -14,7 +14,7 @@ class Document extends Model
     protected $primaryKey = 'id';
     protected $fillable = [ 
         'title',
-        'contents',
+        'content',
         'category_id',
         'exercice_year',
     ];

@@ -16,15 +16,16 @@ use DB;
 
 class storeFileData implements ShouldQueue
 {
-    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
+    use Dispatchable, InteractsWithQueue;
 
     private $importQueue;
     private $register;
+    private $document;
 
     /**
      * Create a new job instance.
      */
-    public function __construct(array $register)
+    public function __construct($register=null)
     {
         $this->register = $register;
         $this->document = new Document;
@@ -33,14 +34,9 @@ class storeFileData implements ShouldQueue
 
     public function handle()
     {
-        Log::info("Tarefa iniciada!");
-        
-        var_dump('>>>>', $this->register);
         $this->document->create($this->register);
 
-        $this->importQueue->whereId($this->register['id'])
-            ->update(['status' => 'processed']);
-
-        Log::info("item processado!");
+        $this->importQueue->where('id', $this->register['id'])
+        ->update(['status' => 'processed']);
     }
 }

@@ -32,12 +32,10 @@ class DocumentsController extends Controller
     public function processFile(ProcessFileRequest $request)
     {
         try {
-            return view(
-                'imports.process', 
-                [
-                    'filename' => $request->input('file')
-                ]
-            );
+            return view('imports.process', [
+                'filename' => $request->input('file'),
+                'slug' => $request->input('slug', 'arquivo.json')
+            ]);
         } catch (\Exception $e) {
             return $this->redirectWithCustomMessage
                 ->errorRoute($e->getMessage());
@@ -48,11 +46,14 @@ class DocumentsController extends Controller
     {
         try {
             $file = $request->uploadFile();
-
             $queueCreated = $this->importService->storeFile($file);
 
             session()->flash('success-info', 'Arquivo enviado com sucesso!');
-            return redirect()->route('process', ['file' => $queueCreated ]);
+
+            return redirect()->route('process', [
+                'file' => $queueCreated, 
+                'slug' => $file['slug'] 
+            ]);
         } catch (\Exception $e) {
             return $this->redirectWithCustomMessage
                 ->errorRoute($e->getMessage());
@@ -63,7 +64,6 @@ class DocumentsController extends Controller
     {
         try {
             $file = $request->identifierFile();
-
             $processed = $this->importService->processFile($file);
 
             return $this->redirectWithCustomMessage

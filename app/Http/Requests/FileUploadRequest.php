@@ -50,8 +50,13 @@ class FileUploadRequest extends FormRequest
 
             if ($this->fileManager->exists($hash))
                 throw new Exception("Arquivo já importado", Response::HTTP_BAD_REQUEST);
-            
-            return [ 'filename' => $hash, 'data' => $formatted, 'file' => $uploadFile ];
+
+            return [ 
+                'slug' => $uploadFile->getClientOriginalName(), 
+                'filename' => $hash, 
+                'data' => $formatted, 
+                'file' => $uploadFile 
+            ];
         }
 
         throw new Exception("Arquivo no formato incorreto", Response::HTTP_BAD_REQUEST);
