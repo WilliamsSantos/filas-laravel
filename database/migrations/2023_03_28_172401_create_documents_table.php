@@ -12,16 +12,29 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('documents', function (Blueprint $table) {
-            $table->id();
-            $table->timestamps();
-            $table->bigInteger('category_id');
-            $table->string('title', 60);
-            $table->text('contents');
+            # Ajustes:
+            // 1- utilizei o método foreignId que: 
+            //   - já cria uma coluna UNSIGNED BIGINT usando a conversão do laravel
+            //     e identifica pela conversão a tabela(category) e coluna (id)
+            // 2- onUpdate pois posteriormente pode ser feito algum tipo de update nos dados
+            // 3- adicionei o softDeletes pois é uma técnica mais seguro
 
-            $table->foreign('category_id')
-                ->references('id')
-                ->on('categories')
+            $table->id();
+            $table->string('title', 60)
+                ->nullable(false);
+
+            $table->text('content');
+
+            $table->integer('exercice_year')
+                ->nullable(false);
+
+            $table->foreignId('category_id')
+                ->constrained()
+                ->onUpdate('cascade')
                 ->onDelete('cascade');
+
+            $table->softDeletes();
+            $table->timestamps();
         });
     }
 

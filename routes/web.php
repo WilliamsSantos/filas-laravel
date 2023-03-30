@@ -1,7 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-
+use App\Http\Controllers\DocumentsController;
 /*
 |--------------------------------------------------------------------------
 | Web Routes
@@ -13,6 +13,16 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-Route::get('/', function () {
-    return view('welcome');
+Route::get('/', [DocumentsController::class, 'index'])
+    ->name('index');
+
+Route::get('/process', [DocumentsController::class, 'processFile'])
+    ->name('process');
+
+Route::prefix('queue')->group(function () {
+    Route::get('/process', [DocumentsController::class, 'runQueue'])
+        ->name('queue.run');
 });
+
+Route::post('/documents/upload', [DocumentsController::class, 'upload'])
+    ->name('documents.upload');
