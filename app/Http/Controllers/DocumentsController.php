@@ -3,13 +3,11 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Validator;
 use App\Http\Requests\FileUploadRequest;
 use App\Http\Requests\ProcessFileRequest;
 use App\Http\Requests\RunQueueRequest;
 use App\Services\ImportService;
 use App\Http\Responses\CustomResponse;
-use DB;
 use Illuminate\Routing\Redirector;
 
 class DocumentsController extends Controller

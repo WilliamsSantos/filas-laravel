@@ -81,7 +81,7 @@ class FileUploadRequest extends FormRequest
     
         if (empty($fileContentArray['documentos']))
         {
-            throw new Exception("Arquivo não possui documentos.", Response::HTTP_BAD_REQUEST); 
+            throw new Exception("Arquivo não possui documentos a serem importados.", Response::HTTP_BAD_REQUEST); 
         }
 
         foreach ($fileContentArray['documentos'] as $document) 
