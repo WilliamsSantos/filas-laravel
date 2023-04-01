@@ -12,8 +12,17 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('categories', function (Blueprint $table) {
+            // #ajustes
+            // 1- no name da categoria eu adicionaei uma restrição de chave exclusiva 
+            // para evitar a criação de categorias duplicadas.
+            // 2- o unique já me gera uma index que nomeei categories_name_unique
+            //      para uma melhor consulta dos dados futuramente
+            // 3- adicionei um softDelete pois é uma técnica mais segura
+
             $table->id();
-            $table->string('name', 20)->nullable(false);
+            $table->string('name', 20)
+                ->nullable(false)
+                ->unique('categories_name_unique');
             $table->softDeletes();
             $table->timestamps();
         });

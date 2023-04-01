@@ -18,15 +18,17 @@ return new class extends Migration
             //     e identifica pela conversão a tabela(category) e coluna (id)
             // 2- onUpdate pois posteriormente pode ser feito algum tipo de update nos dados
             // 3- adicionei o softDeletes pois é uma técnica mais seguro
+            // 4- adicionei um campo exercice year como um index para melhorar consultas
+            //      de documentos importados por exercicio
 
             $table->id();
             $table->string('title', 60)
                 ->nullable(false);
 
             $table->text('content');
-
             $table->integer('exercice_year')
-                ->nullable(false);
+                ->nullable(false)
+                ->index();
 
             $table->foreignId('category_id')
                 ->constrained()

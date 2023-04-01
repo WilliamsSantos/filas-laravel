@@ -14,14 +14,13 @@ return new class extends Migration
         Schema::create('import_queue', function (Blueprint $table) {
             $table->id();
             $table->string('slug', 50)->nullabel(false);
-            $table->string('filename')->nullabel(false);
+            $table->string('filename')->nullabel(false)->unique();
             $table->json('content')->nullable(false);
             $table->enum('status', [
                 'pending', 
                 'processed', 
                 'failed'
-            ])->default('pending');
-
+            ])->default('pending')->index();
             $table->date('processed_at')->nullable(true);
             $table->timestamps();
         });
