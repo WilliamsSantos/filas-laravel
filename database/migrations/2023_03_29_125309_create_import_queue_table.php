@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('import_queue', function (Blueprint $table) {
             $table->id();
             $table->string('slug', 50)->nullabel(false);
-            $table->string('filename')->nullabel(false)->unique();
+            $table->string('filename')->nullabel(false);
             $table->json('content')->nullable(false);
             $table->enum('status', [
                 'pending', 
