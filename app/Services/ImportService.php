@@ -22,7 +22,8 @@ class ImportService
         private Category $category,
         private ResponseMessages $responseMessage,
         private Dispatcher $dispatcher, 
-        private Carbon $carbon
+        private Carbon $carbon,
+        private StoreFileData $storeFileData
     ) 
     {
         $this->documentModel = $document;
@@ -110,9 +111,14 @@ class ImportService
         );
     }
 
-    public function dispatchRegisterToJob($register)
+    private function dispatchRegisterToJob($register)
     {
-        dispatch(new StoreFileData($register));
+        $this->storeFileData->dispatch($register)
+            ->delay(
+                now()->addMinutes(
+                    config('configurations.queue_dispatch_delay_minutes')
+                )
+            );
     }
 
     public function processFile($filename)
