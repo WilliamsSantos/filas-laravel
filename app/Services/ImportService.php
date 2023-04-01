@@ -3,28 +3,34 @@
 namespace App\Services;
 
 use App\Models\Document;
-use App\Jobs\storeFileData;
 use App\Utils\FileManager;
 use App\Models\ImportQueue;
 use App\Models\Category;
+use App\Jobs\StoreFileData;
+use App\Utils\ResponseMessages;
 use \Carbon\Carbon;
+use Illuminate\Contracts\Bus\Dispatcher;
+use Exception;
 use Symfony\Component\HttpFoundation\Response;
 
-use Exception;
-
-class ImportService {
-
-    private $documentModel;
-    private $categoryModel;
-    private $fileManager;
-    private $importQueue;
-
-    public function __construct() 
+class ImportService
+{
+    public function __construct(
+        private Document $document, 
+        private FileManager $fileManager, 
+        private ImportQueue $importQueue, 
+        private Category $category,
+        private ResponseMessages $responseMessage,
+        private Dispatcher $dispatcher, 
+        private Carbon $carbon
+    ) 
     {
-        $this->documentModel = new Document;
-        $this->fileManager = new FileManager;
-        $this->importQueue = new ImportQueue;
-        $this->categoryModel = new Category;
+        $this->documentModel = $document;
+        $this->fileManager = $fileManager;
+        $this->importQueue = $importQueue;
+        $this->categoryModel = $category;
+        $this->responseMessages = $responseMessage;
+        $this->carbon = $carbon;
     }
 
     private function formatDataToBatchInsert($slug, $filename, $documents = [])
@@ -57,13 +63,13 @@ class ImportService {
                         ),
                         'slug' => $slug,
                         'filename' => $filename,
-                        'created_at' => Carbon::now(),
+                        'created_at' => $this->carbon->now(),
                     ];
                     return $result;
                 }
 
                 throw new Exception(
-                    "O Arquivo contem categorias não cadastradas.",
+                    $this->responseMessage::CATEGORY_NOT_FOUND,
                     Response::HTTP_BAD_REQUEST
                 );
             }, []);
@@ -89,7 +95,7 @@ class ImportService {
 
         if (empty($storedDocuments))
             throw new Exception(
-                "Nenhum registro salvo. Registros duplicados não são re-processados.", 
+                $this->responseMessage::NOT_FOUND_OR_DUPLICATED_DATA, 
                 Response::HTTP_INTERNAL_SERVER_ERROR
             );
 
@@ -99,16 +105,23 @@ class ImportService {
         if ($savedFile) return $filename;
 
         throw new Exception(
-            "Falha ao armazenar o arquivo.", Response::HTTP_INTERNAL_SERVER_ERROR
+           $this->responseMessage::STORE_FILE_FAIL, 
+           Response::HTTP_INTERNAL_SERVER_ERROR
         );
+    }
+
+    public function dispatchRegisterToJob($register)
+    {
+        dispatch(new StoreFileData($register));
     }
 
     public function processFile($filename)
     {
-        if ($this->importQueue->where('status', 'pending')->exists()){
-
+        if ($this->importQueue->where('status', 'pending')->exists())
+        {
+            $bathSize = config('configurations.bath_size');
             $columnsToQueueImport = ['id', 'content', 'status'];
-            $bathSize = 100;
+
             $filesPending = $filesProcessed = 0;
             do {
                 $registers = $this->importQueue
@@ -120,16 +133,13 @@ class ImportService {
 
                 $sendsToQueye = 
                     array_reduce($registers, function($acc, $item) {
-
                         $register = json_decode($item['content'], true);
 
-                        dispatch(
-                            new storeFileData([
-                                ...$register, 
-                                'id' => $item['id']
-                            ])
-                        );
-                        
+                        $this->dispatchRegisterToJob([
+                            ...$register, 
+                            'id' => $item['id']
+                        ]);
+          
                         $acc['sends']++;
                         
                         return $acc; 
@@ -140,8 +150,12 @@ class ImportService {
 
             } while ($filesPending > 0);
 
-            return $filesProcessed ?: throw new Exception(
-                "Falha ao tentar processar o arquivo.", Response::HTTP_INTERNAL_SERVER_ERROR
+            if ($filesProcessed)
+                return [ 'processed' => $filesProcessed ];
+
+            throw new Exception(
+                $this->responseMessage::PROCESS_QUEUE_FAIL, 
+                Response::HTTP_INTERNAL_SERVER_ERROR
             );
         }
     }

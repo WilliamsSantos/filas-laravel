@@ -212,4 +212,8 @@ return [
         // 'ExampleClass' => App\Example\ExampleClass::class,
     ])->toArray(),
 
+    'configurations'=> [
+        realpath(base_path('config/configurations.php')),
+    ]
+    
 ];

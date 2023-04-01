@@ -2,17 +2,15 @@
 
 namespace App\Utils;
 
-use Storage;
+use Illuminate\Contracts\Filesystem\Filesystem;
 
 class FileManager
 {
-    private $storage;
     private $storageDir;
 
-    public function __construct()
+    public function __construct(private Filesystem $storage)
     {
         $this->storageDir = 'imports';
-        $this->storage = Storage::disk('public');
     }
 
     public function save($file, $filename)

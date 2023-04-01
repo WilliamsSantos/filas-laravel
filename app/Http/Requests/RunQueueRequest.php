@@ -2,15 +2,19 @@
 
 namespace App\Http\Requests;
 
-use Illuminate\Foundation\Http\FormRequest;
 use App\Utils\FileManager;
+use App\Utils\ResponseMessages;
+use Illuminate\Foundation\Http\FormRequest;
+use Symfony\Component\HttpFoundation\Response;
 
 class RunQueueRequest extends FormRequest
 {
-    private $fileManager;
-
-    public function __construct() {
-        $this->fileManager = new FileManager;
+    public function __construct(
+        private FileManager $fileManager, 
+        private ResponseMessages $responseMessage
+    ) {
+        $this->fileManager = $fileManager;
+        $this->responseMessages = $responseMessage;
     }
 
     public function authorize(): bool
@@ -28,13 +32,19 @@ class RunQueueRequest extends FormRequest
     public function identifierFile(): string
     {
         if (!$this->has('file'))
-            throw new Exception("Arquivo não enviado.", Response::HTTP_BAD_REQUEST);
+            throw new Exception(
+                $this->responseMessage::UPLOAD_FILE_NOT_FOUND, 
+                Response::HTTP_BAD_REQUEST
+            );
 
         $fileId = $this->get('file');
 
         if ($this->fileManager->exists($fileId))
             return $fileId;
 
-        throw new Exception("Arquivo não encontrado. para processamento.", Response::HTTP_BAD_REQUEST);
+        throw new Exception(
+            $this->responseMessage::UPLOAD_FILE_NOT_FOUND_TO_PROCESS, 
+            Response::HTTP_BAD_REQUEST
+        );
     }
 }

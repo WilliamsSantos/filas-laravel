@@ -4,16 +4,21 @@ namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
 use App\Utils\FileManager;
-use Symfony\Component\HttpFoundation\Response;
+use App\Utils\ResponseMessages;
 use Exception;
+use Symfony\Component\HttpFoundation\Response;
 
 class FileUploadRequest extends FormRequest
 {
-    private $maxFileSize = 10240;
-    private $fileManager;
+    private $maxFileSize;
 
-    public function __construct() {
-        $this->fileManager = new FileManager;
+    public function __construct(
+        private FileManager $fileManager, 
+        private ResponseMessages $responseMessage
+    ) {
+        $this->fileManager = $fileManager;
+        $this->maxFileSize = config('configurations.max_file_size');
+        $this->responseMessage = $responseMessage;
     }
 
     public function authorize(): bool
@@ -41,15 +46,20 @@ class FileUploadRequest extends FormRequest
     public function uploadFile(): array
     {
         if (!$this->hasFile('file'))
-            throw new Exception("Nenhum arquivo foi enviado.", Response::HTTP_NOT_FOUND);
+            throw new Exception(
+                $this->responseMessage::UPLOAD_FILE_NOT_FOUND, 
+                Response::HTTP_NOT_FOUND
+            );
 
         $uploadFile = $this->file('file');
-
         if ($formatted = $this->inCorrectFormat($uploadFile)){
             $hash = hash_file('sha256', $uploadFile->getPathname());
 
             if ($this->fileManager->exists($hash))
-                throw new Exception("Arquivo já importado anteriormente.", Response::HTTP_CONFLICT);
+                throw new Exception(
+                    $this->responseMessage::PREVIOUSLY_IMPORTED_FILE, 
+                    Response::HTTP_CONFLICT
+                );
 
             return [ 
                 'slug' => $uploadFile->getClientOriginalName(), 
@@ -59,14 +69,20 @@ class FileUploadRequest extends FormRequest
             ];
         }
 
-        throw new Exception("Arquivo no formato incorreto.", Response::HTTP_CONFLICT);
+        throw new Exception(
+            $this->responseMessage::WRONG_FORMAT_FILE, 
+            Response::HTTP_CONFLICT
+        );
     }
 
     private function inCorrectFormat($fileContent)
     {
         $isCorrectFormat = true;
         if (!$fileContent || empty($fileContent)) {
-            throw new Exception("Arquivo vazio.", Response::HTTP_BAD_REQUEST);
+            throw new Exception(
+                $this->responseMessage::EMPTY_FILE, 
+                Response::HTTP_BAD_REQUEST
+            );
         }
     
         $fileContentArray = (array) json_decode($fileContent->get(), true);
@@ -76,12 +92,18 @@ class FileUploadRequest extends FormRequest
         $keysOfFileContent = array_keys($fileContentArray);
         if (array_intersect($requiredProperties, $keysOfFileContent) !== $requiredProperties) 
         {
-            throw new Exception("Formatação do arquivo fora do padrão.", Response::HTTP_BAD_REQUEST); 
+            throw new Exception(
+                $this->responseMessage::NON_STANDARD_FILE_FORMATTING, 
+                Response::HTTP_BAD_REQUEST
+            ); 
         }
     
         if (empty($fileContentArray['documentos']))
         {
-            throw new Exception("Arquivo não possui documentos a serem importados.", Response::HTTP_BAD_REQUEST); 
+            throw new Exception(
+                $this->responseMessage::FILE_DOCUMENT_IMPORT_EMPTY, 
+                Response::HTTP_BAD_REQUEST
+            ); 
         }
 
         foreach ($fileContentArray['documentos'] as $document) 
@@ -89,7 +111,10 @@ class FileUploadRequest extends FormRequest
             $documentKeys = array_keys($document);
             if (array_intersect($requiredDocumentProperties, $documentKeys) !== $requiredDocumentProperties) 
             {
-                throw new Exception("Arquivo com documentos sem as propriedades necessárias.", Response::HTTP_BAD_REQUEST); 
+                throw new Exception(
+                    $this->responseMessage::MISSING_DOCUMENTS_PROPERTIES, 
+                    Response::HTTP_BAD_REQUEST
+                ); 
             }
         }
 

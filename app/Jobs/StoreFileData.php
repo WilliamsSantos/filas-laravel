@@ -2,24 +2,24 @@
 
 namespace App\Jobs;
 
+use App\Models\ImportQueue;
+use App\Models\Document;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldBeUnique;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
-use App\Models\ImportQueue;
-use App\Models\Document;
+use \Carbon\Carbon;
 use DB;
 
-class storeFileData implements ShouldQueue
+class StoreFileData implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable;
 
     private $importQueue;
     private $register;
     private $document;
-
     /**
      * Create a new job instance.
      */
@@ -30,19 +30,14 @@ class storeFileData implements ShouldQueue
         $this->importQueue = new ImportQueue;
     }
 
-    public function handle()
+    public function handle(): void
     {
         $this->document->create($this->register);
 
         $this->importQueue->where('id', $this->register['id'])
         ->update([
             'status' => 'processed',
-            'processed_at' => \Carbon\Carbon::now()
+            'processed_at' =>\Carbon\Carbon::now()
         ]);
-    }
-
-    public function delay()
-    {
-        return  \Carbon\Carbon::now()->addMinutes(2);
     }
 }
