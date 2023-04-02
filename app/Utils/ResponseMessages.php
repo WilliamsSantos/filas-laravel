@@ -17,5 +17,5 @@ class ResponseMessages
     const EMPTY_FILE = "Arquivo vazio.";
     const NON_STANDARD_FILE_FORMATTING = "Formatação do arquivo fora do padrão.";
     const FILE_DOCUMENT_IMPORT_EMPTY = "Arquivo não possui documentos a serem importados.";
-    const MISSING_DOCUMENTS_PROPERTIES = "Arquivo com documentos sem as propriedades necessárias.";
+    const MISSING_DOCUMENTS_PROPERTIES = "Arquivo com documentos sem as propriedades necessárias. Verifique a formatação do arquivo.";
 }

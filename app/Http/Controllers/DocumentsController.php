@@ -19,13 +19,10 @@ class DocumentsController extends Controller
 
     public function __construct(
         private ImportService $importService, 
-        private CustomResponse $customResponse, 
+        private CustomResponse $redirectWithCustomMessage, 
         private ResponseMessages $responseMessage
     ) {
         $this->defaultRoute = 'index';
-        $this->importService = $importService;
-        $this->redirectWithCustomMessage = $customResponse;
-        $this->responseMessage = $responseMessage;
     }
 
     public function index(): View
@@ -72,6 +69,7 @@ class DocumentsController extends Controller
     {
         try {
             $file = $request->identifierFile();
+
             $processed = $this->importService->processFile($file);
 
             return $this->redirectWithCustomMessage

@@ -16,9 +16,7 @@ class FileUploadRequest extends FormRequest
         private FileManager $fileManager, 
         private ResponseMessages $responseMessage
     ) {
-        $this->fileManager = $fileManager;
         $this->maxFileSize = config('configurations.max_file_size');
-        $this->responseMessage = $responseMessage;
     }
 
     public function authorize(): bool
