@@ -15,7 +15,8 @@ class FileUploadRequest extends FormRequest
     public function __construct(
         private FileManager $fileManager, 
         private ResponseMessages $responseMessage
-    ) {
+    ) 
+    {
         $this->maxFileSize = config('configurations.max_file_size');
     }
 
@@ -50,8 +51,11 @@ class FileUploadRequest extends FormRequest
             );
 
         $uploadFile = $this->file('file');
-        if ($formatted = $this->inCorrectFormat($uploadFile)){
-            $hash = hash_file('sha256', $uploadFile->getPathname());
+        if ($formatted = $this->isCorrectFormat($uploadFile)){
+            $hash = substr(hash_file(
+                'sha256', 
+                $uploadFile->getPathname()
+            ), -15);
 
             if ($this->fileManager->exists($hash))
                 throw new Exception(
@@ -73,7 +77,7 @@ class FileUploadRequest extends FormRequest
         );
     }
 
-    private function inCorrectFormat($fileContent)
+    private function isCorrectFormat($fileContent)
     {
         $isCorrectFormat = true;
         if (!$fileContent || empty($fileContent)) {

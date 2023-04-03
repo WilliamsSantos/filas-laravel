@@ -24,15 +24,7 @@ class ImportService
         private Dispatcher $dispatcher, 
         private Carbon $carbon,
         private StoreFileData $storeFileData
-    ) 
-    {
-        $this->documentModel = $document;
-        $this->fileManager = $fileManager;
-        $this->importQueue = $importQueue;
-        $this->categoryModel = $category;
-        $this->responseMessages = $responseMessage;
-        $this->carbon = $carbon;
-    }
+    ) {}
 
     private function formatDataToBatchInsert($slug, $filename, $documents = [])
     {
@@ -40,28 +32,26 @@ class ImportService
         return array_reduce($documents['documentos'], 
             function ($result, $document) use ($filename, $exercice, $slug) 
             {
-                $isDuplicatedRegister = $this->documentModel
+                $isDuplicatedRegister = $this->document
                     ->where('exercice_year', $exercice)
                     ->whereTitle($document["titulo"])
                     ->exists();
             
                 if ($isDuplicatedRegister) return $result;
 
-                $categoryId = $this->categoryModel
+                $categoryId = $this->category
                     ->whereName($document['categoria'])
                     ->pluck('id')
                     ->first();
 
                 if ($categoryId) {
                     $result[] = [
-                        'content' => json_encode(
-                            [
-                                'category_id' => $categoryId,
-                                'title' => $document["titulo"],
-                                'content' => $document["conteúdo"],
-                                'exercice_year' => $exercice
-                            ]
-                        ),
+                        'content' => json_encode([
+                            'category_id' => $categoryId,
+                            'title' => $document["titulo"],
+                            'content' => $document["conteúdo"],
+                            'exercice_year' => $exercice
+                        ]),
                         'slug' => $slug,
                         'filename' => $filename,
                         'created_at' => $this->carbon->now(),
@@ -89,7 +79,10 @@ class ImportService
             $fileContent,
         );
 
-        $arrayChunk = array_chunk($fileToBatchInsert ?: [], 500);
+        $arrayChunk = array_chunk(
+            $fileToBatchInsert ?: [], 
+            config('configurations.batch_array_chunk_size')
+        );
         $storedDocuments = array_map(function ($batch) {
             $this->importQueue->insert($batch);
         }, $arrayChunk);
@@ -113,7 +106,12 @@ class ImportService
 
     private function dispatchRegisterToJob($register)
     {
-        $this->storeFileData->dispatch($register)
+        $this->storeFileData
+            ->dispatch(
+                $this->importQueue, 
+                $this->document, 
+                $register
+            )
             ->delay(
                 now()->addMinutes(
                     config('configurations.queue_dispatch_delay_minutes')
@@ -123,46 +121,49 @@ class ImportService
 
     public function processFile($filename)
     {
+        $ZERO_VALUE = 0;
         if ($this->importQueue->where('status', 'pending')->exists())
         {
-            $bathSize = config('configurations.bath_size');
+            $batchSize = config('configurations.bath_size');
             $columnsToQueueImport = ['id', 'content', 'status'];
 
-            $filesPending = $filesProcessed = 0;
+            $filesInQueue = $ZERO_VALUE;
             do {
-                $registers = $this->importQueue
+                $queuedRecords = $this->importQueue
                     ->whereFilename($filename)
                     ->whereStatus('pending')
-                    ->take($bathSize)
+                    ->take($batchSize)
                     ->get($columnsToQueueImport)
                     ->toArray();
+        
+                $sendsToQueue = array_map(function ($item) {
+                    $register = json_decode($item['content'], true);
+                    $this->dispatchRegisterToJob([
+                        ...$register, 
+                        'id' => $item['id']
+                    ]);
+                    return $item['id'];
+                }, $queuedRecords);
 
-                $sendsToQueye = 
-                    array_reduce($registers, function($acc, $item) {
-                        $register = json_decode($item['content'], true);
+                $this->importQueue
+                    ->whereIn('id', $sendsToQueue)
+                    ->update([
+                        'status' => 'waiting'
+                    ]);
 
-                        $this->dispatchRegisterToJob([
-                            ...$register, 
-                            'id' => $item['id']
-                        ]);
-          
-                        $acc['sends']++;
-                        
-                        return $acc; 
-                    }, ['sends' => 0 ]);
+                $sendsToQueueBatch = count($sendsToQueue);
 
-                $filesPending = $filesPending;
-                $filesProcessed += count($registers);
-
-            } while ($filesPending > 0);
-
-            if ($filesProcessed)
-                return [ 'processed' => $filesProcessed ];
+                $filesInQueue += $sendsToQueueBatch;
+            } while ($sendsToQueueBatch > $ZERO_VALUE);
+    
+            if ($filesInQueue)
+                return [ 'processed' => $filesInQueue ];
 
             throw new Exception(
                 $this->responseMessage::PROCESS_QUEUE_FAIL, 
                 Response::HTTP_INTERNAL_SERVER_ERROR
             );
         }
+        return [];
     }
 }

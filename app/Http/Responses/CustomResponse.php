@@ -18,11 +18,12 @@ class CustomResponse extends Response
     public static function successRoute(
         ?string $router = null, 
         ?string $message = null, 
+        ?array $params = []
     ): RedirectResponse
     {
         session()->flash('success-info', $message);
 
-        return redirect()->route($router);
+        return redirect()->route($router, $params);
     }
 
     public static function errorRoute(

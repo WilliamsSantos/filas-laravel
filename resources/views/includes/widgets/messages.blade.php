@@ -1,3 +1,7 @@
+@if(request()->has('processed'))
+    <div class="alert alert-success"><b class="total-processed">{{ request()->input('processed', 0) }}</b> items para processar.</div>
+@endif
+
 @if (session('upload_processed'))
     <div class="alert alert-success">{{ session('upload_processed') }}</div>
 @endif

@@ -1,6 +1,7 @@
 
 @extends('layouts.app')
 @section('content')
+
 <form method="post" action="{{ route('documents.upload') }}" enctype="multipart/form-data">
     @csrf
 

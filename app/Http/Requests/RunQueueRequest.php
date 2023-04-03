@@ -12,10 +12,7 @@ class RunQueueRequest extends FormRequest
     public function __construct(
         private FileManager $fileManager, 
         private ResponseMessages $responseMessage
-    ) {
-        $this->fileManager = $fileManager;
-        $this->responseMessages = $responseMessage;
-    }
+    ) {}
 
     public function authorize(): bool
     {
@@ -43,7 +40,7 @@ class RunQueueRequest extends FormRequest
             return $fileId;
 
         throw new Exception(
-            $this->responseMessage::UPLOAD_FILE_NOT_FOUND_TO_PROCESS, 
+            $this->responseMessage::UPLOAD_FILE_NOT_FOUND_TO_PROCESS,
             Response::HTTP_BAD_REQUEST
         );
     }
