@@ -79,7 +79,6 @@ class FileUploadRequest extends FormRequest
 
     private function isCorrectFormat($fileContent)
     {
-        $isCorrectFormat = true;
         if (!$fileContent || empty($fileContent)) {
             throw new Exception(
                 $this->responseMessage::EMPTY_FILE, 
