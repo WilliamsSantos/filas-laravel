@@ -20,3 +20,8 @@ Objetivo do sistema é importar um arquivo .json, e processar cada item 1 a 1 po
 ![1](https://user-images.githubusercontent.com/31832571/228763761-6031fe79-0856-4d23-80d8-fa2c62049f00.png)![2](https://user-images.githubusercontent.com/31832571/228763770-904c430e-167e-4b92-a529-f14184cf6dbc.png)
 ![3](https://user-images.githubusercontent.com/31832571/228763772-f85e9707-1ca4-47cb-9fe9-817c2862721a.png)
 
+#### Obs:
+> o Projeto possui 3 branchs aonde a branch 
+- <b>main</b> contem o código mais atualizado 
+- <b>lancamento</b> aonde possui o primeiro commit da solução 
+- <b>refactory</b> que possui o código tbm atualizado.
